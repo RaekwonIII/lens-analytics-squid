@@ -1,7 +1,54 @@
-type Burn @entity {
+type Profile @entity {
   id: ID!
-  block: Int!
   address: String! @index
-  value: BigInt!
-  txHash: String!
+  creator: String! @index
+  handle: String! @index
+  imageURI: String!
+  profileId: Int!
+  timestamp: BigInt!
+}
+
+type Post @entity {
+  id: ID!
+  contentURI: String!
+  postId: Int!
+  profileId: Int!
+  creatorProfile: Profile! @index
+  timestamp: BigInt!
+}
+
+type Comment @entity {
+  id: ID!
+  contentURI: String!
+  commentId: Int!
+  profileId: Int!
+  profile: Profile! @index
+  originalPostId: Int!
+  originalPost: Post!
+  originalProfileId: Int!
+  originalProfile: Profile! @index
+  timestamp: BigInt!
+}
+
+type Mirror @entity {
+  id: ID!
+  postId: Int! @index
+  post: Post!
+  profileId: Int! @index
+  profile: Profile! @index
+  originalPostId: Int! @index
+  originalPost: Post! @index
+  originalProfileId: Int!
+  originalProfile: Profile!
+  timestamp: BigInt!
+}
+
+type CollectAction @entity {
+  id: ID!
+  postId: Int! @index
+  post: Post! @index
+  creatorProfileId: Int!
+  creatorProfile:  Profile!
+  collectorProfile: Profile! @index
+  timestamp: BigInt!
 }
