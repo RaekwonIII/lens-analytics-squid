@@ -1,5 +1,4 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_, ManyToOne as ManyToOne_} from "typeorm"
-import * as marshal from "./marshal"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
 import {Post} from "./post.model"
 import {Profile} from "./profile.model"
 
@@ -12,7 +11,6 @@ export class Mirror {
     @PrimaryColumn_()
     id!: string
 
-    @Index_()
     @Column_("int4", {nullable: false})
     postId!: number
 
@@ -20,7 +18,6 @@ export class Mirror {
     @ManyToOne_(() => Post, {nullable: true})
     post!: Post
 
-    @Index_()
     @Column_("int4", {nullable: false})
     profileId!: number
 
@@ -28,7 +25,6 @@ export class Mirror {
     @ManyToOne_(() => Profile, {nullable: true})
     profile!: Profile
 
-    @Index_()
     @Column_("int4", {nullable: false})
     originalPostId!: number
 
@@ -43,6 +39,7 @@ export class Mirror {
     @ManyToOne_(() => Profile, {nullable: true})
     originalProfile!: Profile
 
-    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
-    timestamp!: bigint
+    @Index_()
+    @Column_("timestamp with time zone", {nullable: false})
+    timestamp!: Date
 }

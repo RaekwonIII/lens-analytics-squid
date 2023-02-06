@@ -1,5 +1,4 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
-import * as marshal from "./marshal"
 import {Profile} from "./profile.model"
 import {Post} from "./post.model"
 
@@ -39,6 +38,7 @@ export class Comment {
     @ManyToOne_(() => Profile, {nullable: true})
     originalProfile!: Profile
 
-    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
-    timestamp!: bigint
+    @Index_()
+    @Column_("timestamp with time zone", {nullable: false})
+    timestamp!: Date
 }

@@ -1,5 +1,4 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
-import * as marshal from "./marshal"
 import {Profile} from "./profile.model"
 
 @Entity_()
@@ -11,8 +10,8 @@ export class Post {
     @PrimaryColumn_()
     id!: string
 
-    @Column_("text", {nullable: false})
-    contentURI!: string
+    @Column_("text", {nullable: true})
+    contentURI!: string | undefined | null
 
     @Column_("int4", {nullable: false})
     postId!: number
@@ -24,6 +23,7 @@ export class Post {
     @ManyToOne_(() => Profile, {nullable: true})
     creatorProfile!: Profile
 
-    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
-    timestamp!: bigint
+    @Index_()
+    @Column_("timestamp with time zone", {nullable: false})
+    timestamp!: Date
 }

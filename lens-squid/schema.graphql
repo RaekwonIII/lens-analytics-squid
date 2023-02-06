@@ -1,20 +1,22 @@
 type Profile @entity {
   id: ID!
-  address: String! @index
-  creator: String! @index
-  handle: String! @index
-  imageURI: String!
+  address: String @index
+  handle: String @index
+  imageURI: String
   profileId: Int!
-  timestamp: BigInt!
+  posts: [Post!] @derivedFrom(field: "creatorProfile")
+  comments: [Comment!] @derivedFrom(field: "profile")
+  mirrors: [Mirror!] @derivedFrom(field: "profile")
+  timestamp: DateTime! @index
 }
 
 type Post @entity {
   id: ID!
-  contentURI: String!
+  contentURI: String
   postId: Int!
   profileId: Int!
   creatorProfile: Profile! @index
-  timestamp: BigInt!
+  timestamp: DateTime! @index
 }
 
 type Comment @entity {
@@ -27,28 +29,28 @@ type Comment @entity {
   originalPost: Post!
   originalProfileId: Int!
   originalProfile: Profile! @index
-  timestamp: BigInt!
+  timestamp: DateTime! @index
 }
 
 type Mirror @entity {
   id: ID!
-  postId: Int! @index
+  postId: Int! 
   post: Post!
-  profileId: Int! @index
-  profile: Profile! @index
-  originalPostId: Int! @index
-  originalPost: Post! @index
+  profileId: Int! 
+  profile: Profile! 
+  originalPostId: Int! 
+  originalPost: Post! 
   originalProfileId: Int!
   originalProfile: Profile!
-  timestamp: BigInt!
+  timestamp: DateTime! @index
 }
 
 type CollectAction @entity {
   id: ID!
-  postId: Int! @index
-  post: Post! @index
+  postId: Int!
+  post: Post!
   creatorProfileId: Int!
   creatorProfile:  Profile!
-  collectorProfile: Profile! @index
-  timestamp: BigInt!
+  collectorProfile: Profile!
+  timestamp: DateTime! @index
 }

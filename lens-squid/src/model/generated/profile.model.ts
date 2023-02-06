@@ -1,5 +1,7 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_} from "typeorm"
-import * as marshal from "./marshal"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
+import {Post} from "./post.model"
+import {Comment} from "./comment.model"
+import {Mirror} from "./mirror.model"
 
 @Entity_()
 export class Profile {
@@ -11,23 +13,29 @@ export class Profile {
     id!: string
 
     @Index_()
-    @Column_("text", {nullable: false})
-    address!: string
+    @Column_("text", {nullable: true})
+    address!: string | undefined | null
 
     @Index_()
-    @Column_("text", {nullable: false})
-    creator!: string
+    @Column_("text", {nullable: true})
+    handle!: string | undefined | null
 
-    @Index_()
-    @Column_("text", {nullable: false})
-    handle!: string
-
-    @Column_("text", {nullable: false})
-    imageURI!: string
+    @Column_("text", {nullable: true})
+    imageURI!: string | undefined | null
 
     @Column_("int4", {nullable: false})
     profileId!: number
 
-    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
-    timestamp!: bigint
+    @OneToMany_(() => Post, e => e.creatorProfile)
+    posts!: Post[]
+
+    @OneToMany_(() => Comment, e => e.profile)
+    comments!: Comment[]
+
+    @OneToMany_(() => Mirror, e => e.profile)
+    mirrors!: Mirror[]
+
+    @Index_()
+    @Column_("timestamp with time zone", {nullable: false})
+    timestamp!: Date
 }
