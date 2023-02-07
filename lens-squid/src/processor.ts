@@ -1,6 +1,5 @@
 import { Store, TypeormDatabase } from "@subsquid/typeorm-store";
 import {
-  assertNotNull,
   BlockHandlerContext,
   EvmBatchProcessor,
 } from "@subsquid/evm-processor";
@@ -386,6 +385,7 @@ async function saveLensData(
         originalProfile: profilePointedModel,
         timestamp,
       });
+      commentModels.set(formatPostId(profileId, pubId), commentModel);
     }
   }
 
@@ -440,7 +440,6 @@ async function saveLensData(
     // verify the post does not exist.
     let postModel = postModels.get(formatPostId(profileId, pubId));
     if (postModel == null) {
-      // ctx.log.warn(`Missing post for comment ${pubId}, creating it`);
       postModel = new Post({
         id: formatPostId(profileId, pubId),
         postId: pubId,
@@ -452,6 +451,7 @@ async function saveLensData(
     }
     let mirrorModel = mirrorModels.get(formatPostId(profileId, pubId));
     if (mirrorModel == null) {
+      // ctx.log.info(`Saving mirror with id: ${profileId}-${pubId}, for post: ${profileIdPointed}-${pubIdPointed}`)
       mirrorModel = new Mirror({
         id: formatPostId(profileId, pubId),
         postId: pubId,
@@ -464,11 +464,12 @@ async function saveLensData(
         originalProfile: profilePointedModel,
         timestamp,
       });
+      mirrorModels.set(formatPostId(profileId, pubId), mirrorModel);
     }
   }
 
   await ctx.store.save([...profileModels.values()]);
   await ctx.store.save([...postModels.values()]);
   await ctx.store.save([...commentModels.values()]);
-  await ctx.store.save([...mirrorModels.values()]);
+  // await ctx.store.save([...mirrorModels.values()]);
 }

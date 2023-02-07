@@ -15,6 +15,7 @@ type Post @entity {
   contentURI: String
   postId: Int!
   profileId: Int!
+  mirrors: [Mirror!] @derivedFrom(field: "originalPost")
   creatorProfile: Profile! @index
   timestamp: DateTime! @index
 }
