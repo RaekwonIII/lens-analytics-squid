@@ -69,11 +69,6 @@ const graphQLOptions = {
   data: requestBody
 };
 
-function getBarChartData() {
-
-  
-}
-
 type DataInterface = {
   labels: string[],
   datasets: {
