@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import type { EntityManager } from 'typeorm'
 import { Field, ObjectType, Query, Resolver } from 'type-graphql'
-import { Profile, Post, Comment, Mirror } from '../../model'
+import { Profile, Post, Comment } from '../../model'
 
 @ObjectType()
 export class ProfilesDayData {
@@ -133,32 +133,5 @@ export class MirrorDayData {
 
     constructor(props: Partial<MirrorDayData>) {
         Object.assign(this, props)
-    }
-}
-
-@Resolver()
-export class MirrorDayDataResolver {
-    constructor(private tx: () => Promise<EntityManager>) {}
-
-    @Query(()=>[MirrorDayData])
-    async getMirrorDayData(): Promise<MirrorDayData[]> {
-        const manager = await this.tx()
-        const repository = manager.getRepository(Mirror)
-
-        const data: {
-            day: string
-            count: number
-        }[] = await repository.query(`
-            SELECT DATE(timestamp) AS day, COUNT(*) as count
-            FROM mirror
-            GROUP BY day
-            ORDER BY day ASC
-        `)
-        return data.map(
-            (i) => new MirrorDayData({
-                day: new Date(i.day),
-                count: i.count
-            })
-        )
     }
 }

@@ -5,7 +5,7 @@ import {
 } from "@subsquid/evm-processor";
 import { lookupArchive } from "@subsquid/archive-registry";
 import { events } from "./abi/Events";
-import { Profile, Post, Comment, Mirror, CollectAction } from "./model";
+import { Profile, Post, Comment, } from "./model";
 import { In } from "typeorm";
 
 const lensContractAddress =
@@ -21,8 +21,6 @@ const processor = new EvmBatchProcessor()
         events.ProfileCreated.topic,
         events.PostCreated.topic,
         events.CommentCreated.topic,
-        events.MirrorCreated.topic,
-        events.Collected.topic,
       ],
     ],
     data: {
@@ -63,27 +61,11 @@ type CommentCreated = {
   contentURI: string;
   timestamp: Date;
 };
-type MirrorCreated = {
-  profileId: number;
-  pubId: number;
-  profileIdPointed: number;
-  pubIdPointed: number;
-  timestamp: Date;
-};
-
-type CollectedEvent = {
-  collector: string;
-  profileId: number;
-  pubId: number;
-  timestamp: Date;
-};
 
 processor.run(new TypeormDatabase(), async (ctx) => {
   const profiles: ProfileCreated[] = [];
   const posts: PostCreated[] = [];
   const comments: CommentCreated[] = [];
-  const mirrors: MirrorCreated[] = [];
-  const collectedEvents: CollectedEvent[] = [];
 
   for (let c of ctx.blocks) {
     for (let i of c.items) {
@@ -98,7 +80,6 @@ processor.run(new TypeormDatabase(), async (ctx) => {
             to,
             timestamp: new Date(timestamp.toNumber() * 1000),
           });
-          // ctx.log.info(`New profile found! Address: ${to}, profile id: ${profileId}`);
         }
         if (i.evmLog.topics[0] === events.PostCreated.topic) {
           try {
@@ -116,7 +97,6 @@ processor.run(new TypeormDatabase(), async (ctx) => {
               ctx.log.info(error.message);
             }
           }
-          // ctx.log.info(`New Post found! PostID: ${pubId}, profile id: ${profileId}`);
         }
         if (i.evmLog.topics[0] === events.CommentCreated.topic) {
           try {
@@ -143,32 +123,6 @@ processor.run(new TypeormDatabase(), async (ctx) => {
             }
           }
         }
-        if (i.evmLog.topics[0] === events.MirrorCreated.topic) {
-          const {
-            profileId,
-            pubId,
-            profileIdPointed,
-            pubIdPointed,
-            timestamp,
-          } = events.MirrorCreated.decode(i.evmLog);
-          mirrors.push({
-            profileId: profileId.toNumber(),
-            pubId: pubId.toNumber(),
-            profileIdPointed: profileIdPointed.toNumber(),
-            pubIdPointed: pubIdPointed.toNumber(),
-            timestamp: new Date(timestamp.toNumber() * 1000),
-          });
-        }
-        if (i.evmLog.topics[0] === events.Collected.topic) {
-          const { collector, profileId, pubId, timestamp } =
-            events.Collected.decode(i.evmLog);
-          collectedEvents.push({
-            collector,
-            profileId: profileId.toNumber(),
-            pubId: pubId.toNumber(),
-            timestamp: new Date(timestamp.toNumber() * 1000),
-          });
-        }
       }
     }
   }
@@ -181,8 +135,6 @@ processor.run(new TypeormDatabase(), async (ctx) => {
     profiles,
     posts,
     comments,
-    mirrors,
-    collectedEvents
   );
 });
 
@@ -191,13 +143,10 @@ async function saveLensData(
   profiles: ProfileCreated[],
   posts: PostCreated[],
   comments: CommentCreated[],
-  mirrors: MirrorCreated[],
-  collectedEvents: CollectedEvent[]
 ) {
   const profileIds: Set<number> = new Set();
   const postIds: Set<string> = new Set();
   const commentIds: Set<string> = new Set();
-  const mirrorIds: Set<string> = new Set();
 
   for (const profile of profiles) {
     profileIds.add(profile.profileId);
@@ -219,20 +168,6 @@ async function saveLensData(
     profileIds.add(comment.profileIdPointed);
   }
 
-  for (const mirror of mirrors) {
-    postIds.add(formatPostId(mirror.profileId, mirror.pubId));
-    postIds.add(formatPostId(mirror.profileIdPointed, mirror.pubIdPointed));
-    mirrorIds.add(formatPostId(mirror.profileId, mirror.pubId));
-    mirrorIds.add(formatPostId(mirror.profileIdPointed, mirror.pubIdPointed));
-    profileIds.add(mirror.profileId);
-    profileIds.add(mirror.profileIdPointed);
-  }
-
-  // for (const collectedEvent of collectedEvents) {
-  //   postIds.add(formatPostId(collectedEvent.profileId, collectedEvent.pubId));
-  //   profileIds.add(collectedEvent.profileId);
-  // }
-
   const profileModels: Map<string, Profile> = new Map(
     (await ctx.store.findBy(Profile, { id: In([...profileIds]) })).map(
       (profile) => [profile.profileId.toString(), profile]
@@ -249,12 +184,6 @@ async function saveLensData(
   const commentModels: Map<string, Comment> = new Map(
     (await ctx.store.findBy(Comment, { id: In([...commentIds]) })).map(
       (comment) => [formatPostId(comment.profileId, comment.commentId), comment]
-    )
-  );
-
-  const mirrorModels: Map<string, Mirror> = new Map(
-    (await ctx.store.findBy(Mirror, { id: In([...mirrorIds]) })).map(
-      (mirror) => [formatPostId(mirror.profileId, mirror.postId), mirror]
     )
   );
 
@@ -389,87 +318,7 @@ async function saveLensData(
     }
   }
 
-  for (const mirror of mirrors) {
-    const { pubId, profileId, timestamp, profileIdPointed, pubIdPointed } =
-      mirror;
-    // collect pointed profile and pubblication
-    let profilePointedModel = profileModels.get(profileIdPointed.toString());
-    let postPointedModel = postModels.get(
-      formatPostId(profileIdPointed, pubIdPointed)
-    );
-    if (profilePointedModel == null) {
-      ctx.log.warn(
-        `Profile ID ${profileIdPointed} for mirror ${profileId}-${pubId} could not be found, creating it`
-      );
-      profilePointedModel = new Profile({
-        id: profileIdPointed.toString(),
-        profileId: profileIdPointed,
-        timestamp,
-      });
-      profileModels.set(profileIdPointed.toString(), profilePointedModel);
-    }
-    if (postPointedModel == null) {
-      ctx.log.warn(
-        `Post ${profileIdPointed}-${pubIdPointed} for mirror ${profileId}-${pubId} could not be found, creating it`
-      );
-      postPointedModel = new Post({
-        id: formatPostId(profileIdPointed, pubIdPointed),
-        postId: pubIdPointed,
-        profileId: profileIdPointed,
-        creatorProfile: profilePointedModel,
-        timestamp,
-      });
-      postModels.set(
-        formatPostId(profileIdPointed, pubIdPointed),
-        postPointedModel
-      );
-    }
-    // collect commenter profile
-    let profileModel = profileModels.get(profileId.toString());
-    if (profileModel == null) {
-      ctx.log.warn(
-        `Missing profile with ID ${profileId} for mirror ${pubId}, creating it`
-      );
-      profileModel = new Profile({
-        id: profileId.toString(),
-        profileId,
-        timestamp,
-      });
-      profileModels.set(profileId.toString(), profileModel);
-    }
-    // verify the post does not exist.
-    let postModel = postModels.get(formatPostId(profileId, pubId));
-    if (postModel == null) {
-      postModel = new Post({
-        id: formatPostId(profileId, pubId),
-        postId: pubId,
-        profileId,
-        creatorProfile: profileModel,
-        timestamp,
-      });
-      postModels.set(formatPostId(profileId, pubId), postModel);
-    }
-    let mirrorModel = mirrorModels.get(formatPostId(profileId, pubId));
-    if (mirrorModel == null) {
-      // ctx.log.info(`Saving mirror with id: ${profileId}-${pubId}, for post: ${profileIdPointed}-${pubIdPointed}`)
-      mirrorModel = new Mirror({
-        id: formatPostId(profileId, pubId),
-        postId: pubId,
-        post: postModel,
-        profileId,
-        profile: profileModel,
-        originalPostId: pubIdPointed,
-        originalPost: postPointedModel,
-        originalProfileId: profileIdPointed,
-        originalProfile: profilePointedModel,
-        timestamp,
-      });
-      mirrorModels.set(formatPostId(profileId, pubId), mirrorModel);
-    }
-  }
-
   await ctx.store.save([...profileModels.values()]);
   await ctx.store.save([...postModels.values()]);
   await ctx.store.save([...commentModels.values()]);
-  // await ctx.store.save([...mirrorModels.values()]);
 }

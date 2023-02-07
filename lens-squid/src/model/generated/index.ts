@@ -1,5 +1,3 @@
 export * from "./profile.model"
 export * from "./post.model"
 export * from "./comment.model"
-export * from "./mirror.model"
-export * from "./collectAction.model"

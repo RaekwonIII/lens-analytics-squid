@@ -6,7 +6,6 @@ type Profile @entity {
   profileId: Int!
   posts: [Post!] @derivedFrom(field: "creatorProfile")
   comments: [Comment!] @derivedFrom(field: "profile")
-  mirrors: [Mirror!] @derivedFrom(field: "profile")
   timestamp: DateTime! @index
 }
 
@@ -15,7 +14,6 @@ type Post @entity {
   contentURI: String
   postId: Int!
   profileId: Int!
-  mirrors: [Mirror!] @derivedFrom(field: "originalPost")
   creatorProfile: Profile! @index
   timestamp: DateTime! @index
 }
@@ -30,28 +28,5 @@ type Comment @entity {
   originalPost: Post!
   originalProfileId: Int!
   originalProfile: Profile! @index
-  timestamp: DateTime! @index
-}
-
-type Mirror @entity {
-  id: ID!
-  postId: Int! 
-  post: Post!
-  profileId: Int! 
-  profile: Profile! 
-  originalPostId: Int! 
-  originalPost: Post! 
-  originalProfileId: Int!
-  originalProfile: Profile!
-  timestamp: DateTime! @index
-}
-
-type CollectAction @entity {
-  id: ID!
-  postId: Int!
-  post: Post!
-  creatorProfileId: Int!
-  creatorProfile:  Profile!
-  collectorProfile: Profile!
   timestamp: DateTime! @index
 }

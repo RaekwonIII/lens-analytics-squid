@@ -1,7 +1,6 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
 import {Post} from "./post.model"
 import {Comment} from "./comment.model"
-import {Mirror} from "./mirror.model"
 
 @Entity_()
 export class Profile {
@@ -31,9 +30,6 @@ export class Profile {
 
     @OneToMany_(() => Comment, e => e.profile)
     comments!: Comment[]
-
-    @OneToMany_(() => Mirror, e => e.profile)
-    mirrors!: Mirror[]
 
     @Index_()
     @Column_("timestamp with time zone", {nullable: false})

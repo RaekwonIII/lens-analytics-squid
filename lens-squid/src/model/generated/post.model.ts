@@ -1,5 +1,4 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToMany as OneToMany_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
-import {Mirror} from "./mirror.model"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
 import {Profile} from "./profile.model"
 
 @Entity_()
@@ -19,9 +18,6 @@ export class Post {
 
     @Column_("int4", {nullable: false})
     profileId!: number
-
-    @OneToMany_(() => Mirror, e => e.originalPost)
-    mirrors!: Mirror[]
 
     @Index_()
     @ManyToOne_(() => Profile, {nullable: true})
