@@ -46,5 +46,7 @@ tasks:
       sqd process
   - name: React page
     command: |
+      gp sync-await setup
       npm start
+      gp ports await 3000 
       gp preview $(gp url 3000)

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -7,9 +7,9 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-import axios from 'axios';
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+import axios from "axios";
 
 ChartJS.register(
   CategoryScale,
@@ -24,17 +24,17 @@ export const barChartOptions = {
   responsive: true,
   plugins: {
     legend: {
-      position: 'top' as const,
+      position: "top" as const,
     },
     title: {
       display: false,
-      text: 'Daily Analytics',
+      text: "Daily Analytics",
     },
   },
 };
 
 const headers = {
-  'content-type': 'application/json',
+  "content-type": "application/json",
 };
 const requestBody = {
   query: `query MyQuery {
@@ -63,88 +63,105 @@ const requestBody = {
   `,
 };
 const graphQLOptions = {
-  method: 'POST',
+  method: "POST",
   url: "http://localhost:4350/graphql",
   headers,
-  data: requestBody
+  data: requestBody,
 };
 
 type DataInterface = {
-  labels: string[],
+  labels: string[];
   datasets: {
-    label: string,
-    data: number[],
-    backgroundColor: string,
-  }[],
-}
+    label: string;
+    data: number[];
+    backgroundColor: string;
+  }[];
+};
 
 export function App() {
-
-  const [barChartData, setBarChartData] = React.useState<DataInterface | null>(null);
+  const [barChartData, setBarChartData] = React.useState<DataInterface | null>(
+    null
+  );
   React.useEffect(() => {
     try {
       axios(graphQLOptions).then((response) => {
         let labelsSet: Set<string> = new Set([
           ...response.data.data.getProfilesDayData.map((obj: any) => obj.day),
           ...response.data.data.getPostDayData.map((obj: any) => obj.day),
-          ...response.data.data.getCommentDayData.map((obj: any) => obj.day)
-        ])
-    
-        let profileDataMap: Map<string,number> = new Map<string, number>();
-        let postDataMap: Map<string,number> = new Map<string, number>();
-        let commentDataMap: Map<string,number> = new Map<string, number>();
+          ...response.data.data.getCommentDayData.map((obj: any) => obj.day),
+        ]);
+
+        let profileDataMap: Map<string, number> = new Map<string, number>();
+        let postDataMap: Map<string, number> = new Map<string, number>();
+        let commentDataMap: Map<string, number> = new Map<string, number>();
         for (const date of labelsSet) {
-          profileDataMap.set(date, response.data.data.getProfilesDayData.find( (obj:any) => obj.day === date)?.count || 0)
-          postDataMap.set(date, response.data.data.getPostDayData.find( (obj:any) => obj.day === date)?.count || 0)
-          commentDataMap.set(date, response.data.data.getCommentDayData.find( (obj:any) => obj.day === date)?.count || 0)
+          profileDataMap.set(
+            date,
+            response.data.data.getProfilesDayData.find(
+              (obj: any) => obj.day === date
+            )?.count || 0
+          );
+          postDataMap.set(
+            date,
+            response.data.data.getPostDayData.find(
+              (obj: any) => obj.day === date
+            )?.count || 0
+          );
+          commentDataMap.set(
+            date,
+            response.data.data.getCommentDayData.find(
+              (obj: any) => obj.day === date
+            )?.count || 0
+          );
         }
-        console.log([...profileDataMap.values()])
+        console.log([...profileDataMap.values()]);
         setBarChartData({
-          labels: [...labelsSet].map(dateString => new Date(dateString).toLocaleDateString()),
+          labels: [...labelsSet].map((dateString) =>
+            new Date(dateString).toLocaleDateString()
+          ),
           datasets: [
             {
-              label: 'Daily Profiles created',
+              label: "Daily Profiles created",
               data: [...profileDataMap.values()],
-              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              backgroundColor: "rgba(255, 99, 132, 0.5)",
             },
             {
-              label: 'Daily Posts created',
+              label: "Daily Posts created",
               data: [...postDataMap.values()],
-              backgroundColor: 'rgba(53, 162, 235, 0.5)',
+              backgroundColor: "rgba(53, 162, 235, 0.5)",
             },
             {
-              label: 'Daily Comments created',
+              label: "Daily Comments created",
               data: [...commentDataMap.values()],
-              backgroundColor: 'rgba(20, 255, 235, 0.5)',
+              backgroundColor: "rgba(20, 255, 235, 0.5)",
             },
           ],
-        })
-      })
+        });
+      });
+    } catch (err) {
+      console.log("ERROR DURING AXIOS REQUEST", err);
     }
-    catch (err) {
-      console.log('ERROR DURING AXIOS REQUEST', err);
-    };
-
   }, []);
 
   if (!barChartData) return <h1>"No data 🤷‍♂️!"</h1>;
   const profileBarChartData = {
     labels: barChartData.labels,
-    datasets: [ barChartData.datasets[0] ]
-  }
+    datasets: [barChartData.datasets[0]],
+  };
   const postsBarChartData = {
     labels: barChartData.labels,
-    datasets: [ barChartData.datasets[1] ]
-  }
+    datasets: [barChartData.datasets[1]],
+  };
   const commentsBarChartData = {
     labels: barChartData.labels,
-    datasets: [ barChartData.datasets[2] ]
-  }
-  return <div>
-     <Bar options={barChartOptions} data={profileBarChartData} />
-     <Bar options={barChartOptions} data={postsBarChartData} />
-     <Bar options={barChartOptions} data={commentsBarChartData} />
-     <Bar options={barChartOptions} data={barChartData} />
-  </div>
-  ;
+    datasets: [barChartData.datasets[2]],
+  };
+  return (
+    <div>
+      <Bar options={barChartOptions} data={profileBarChartData} />
+      <Bar options={barChartOptions} data={postsBarChartData} />
+      <Bar options={barChartOptions} data={commentsBarChartData} />
+      <Bar options={barChartOptions} data={barChartData} />
+    </div>
+  );
 }
