@@ -1,7 +1,7 @@
 # [Lens protocol](https://www.lens.xyz/) data analytics - A squid example for Polygon network
 
 <p align="center">
-	<img src="lens-squid/assets/lens_banner.png">
+	<img src="lens-squid/assets/lens-banner.png">
 </p>
 
 <div align="center">

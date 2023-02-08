@@ -21,36 +21,38 @@ tasks:
       npm i
       docker compose pull
       gp sync-done setup
-  - name: DB
+      exit
+  - name: Squid setup
     command: |
       npm i -g @subsquid/cli
       cd lens-squid
       npm i
+      sqd build
       gp sync-done squid-setup
-  - name: DB
+      exit
+  - name: DB & GraphQL API
     command: |
       gp sync-await squid-setup
       cd lens-squid
       sqd up
-  - name: GraphQL API
-    command: |
-      gp sync-await squid-setup
-      cd lens-squid
+      gp ports await 23798
+      sqd migration:apply
+      gp sync-done db
       sqd serve
-  # - command: |
-  #     gp ports await 4350 
-  #     gp preview $(gp url 4350)/graphql
   - name: Squid procesor
     command: |
+      gp sync-await db
+      gp ports await 23798
       cd lens-squid
       gp open src/processor.ts
-      gp sync-await squid-setup
-      sqd build
-      gp ports await 23798
       sqd process
-  - name: React page
+  - name: React App
     command: |
       gp sync-await setup
-      npm start
+      gp ports await 4350
+      REACT_APP_SQUID_GRAPHQL="$(gp url 4350)/graphql" npm start
+  - name: React page
+    command: |
       gp ports await 3000 
       gp preview $(gp url 3000)
+      exit

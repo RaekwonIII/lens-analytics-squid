@@ -64,7 +64,7 @@ const requestBody = {
 };
 const graphQLOptions = {
   method: "POST",
-  url: "http://localhost:4350/graphql",
+  url: process.env.REACT_APP_SQUID_GRAPHQL || "http://localhost:4350/graphql",
   headers,
   data: requestBody,
 };
@@ -114,7 +114,6 @@ export function App() {
             )?.count || 0
           );
         }
-        console.log([...profileDataMap.values()]);
         setBarChartData({
           labels: [...labelsSet].map((dateString) =>
             new Date(dateString).toLocaleDateString()
@@ -143,7 +142,10 @@ export function App() {
     }
   }, []);
 
-  if (!barChartData) return <h1>"No data 🤷‍♂️!"</h1>;
+  if (!barChartData) return <div>
+      <h1>"No data 🤷‍♂️!"</h1>
+      <h2>Try to refresh the page in a short while</h2>
+    </div>;
   const profileBarChartData = {
     labels: barChartData.labels,
     datasets: [barChartData.datasets[0]],
@@ -158,6 +160,7 @@ export function App() {
   };
   return (
     <div>
+      <h2>This page does not auto-refresh. Reload for new data</h2>
       <Bar options={barChartOptions} data={profileBarChartData} />
       <Bar options={barChartOptions} data={postsBarChartData} />
       <Bar options={barChartOptions} data={commentsBarChartData} />
