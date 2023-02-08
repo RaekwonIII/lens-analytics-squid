@@ -19,18 +19,22 @@ github:
 tasks:
   - init: |
       npm i
-      npm i -g @subsquid/cli
-      cd lens-squid
       docker compose pull
       gp sync-done setup
   - name: DB
     command: |
-      gp sync-await setup
+      npm i -g @subsquid/cli
+      cd lens-squid
+      npm i
+      gp sync-done squid-setup
+  - name: DB
+    command: |
+      gp sync-await squid-setup
       cd lens-squid
       sqd up
   - name: GraphQL API
     command: |
-      gp sync-await setup
+      gp sync-await squid-setup
       cd lens-squid
       sqd serve
   # - command: |
@@ -40,7 +44,7 @@ tasks:
     command: |
       cd lens-squid
       gp open src/processor.ts
-      gp sync-await setup
+      gp sync-await squid-setup
       sqd build
       gp ports await 23798
       sqd process
